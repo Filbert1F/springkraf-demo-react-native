@@ -1,39 +1,14 @@
 import { NoteType } from "@/types/note";
-import getToken from "@/utils/get-token";
-import removeToken from "@/utils/remove-token";
+import { fetchWithAuth } from "./fetch-with-auth";
 
-export const getNotes = async (title: string | undefined) => {
-  const token = await getToken()
-  const url = 'https://notes-api.dicoding.dev/v1/notes';
-  const options = {
-    method: 'GET',
-    headers: {
-      'content-type': 'application/json',
-      accept: 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-  }
-
-  const res = await fetch(url, options)
-
-  const json = await res.json()
-
-  console.log(json)
-
-  if (!res.ok) {
-    const error = new Error(json.message);
-    (error as any).status = res.status;
-    
-    throw error;
-  }
-
-  const notes = json.data as NoteType[]
-
-  console.log(title)
+export const getNotes = async (title?: string) => {
+  const response = await fetchWithAuth<{ data: NoteType[] }>('/notes', {
+    method: 'GET'
+  });
 
   if (title !== undefined) {
-    return notes.filter(((el) => el.title.includes(title)))
+    return response.data.filter(note => note.title.toLowerCase().includes(title.toLowerCase()));
   }
   
-  return notes
-}
+  return response.data;
+};
