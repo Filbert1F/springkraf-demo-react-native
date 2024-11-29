@@ -1,13 +1,11 @@
-import { postRegister } from "@/api/post-register";
+import { useRegister } from "@/api-hooks/menu/mutation";
 import AbsoluteButtonCustom from "@/components/AbsoluteButtonCustom";
 import ButtonCustom from "@/components/ButtonCustom";
 import SvgComponent from "@/components/SvgComponent";
 import TextInputCustom from "@/components/TextInputCustom";
-import { useMutation } from "@tanstack/react-query";
-import { Link, useNavigation } from "expo-router";
+import { Link } from "expo-router";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
-import Svg, { G, Path } from "react-native-svg";
 
 export default function Register() {
 
@@ -21,8 +19,7 @@ export default function Register() {
 
   const [successMessage, setSuccessMessage] = useState('')
 
-  const { mutate, isPending, isError } = useMutation({
-    mutationFn: () => postRegister(nameValue, emailValue, passwordValue),
+  const { mutate, isPending } = useRegister({
     onSuccess: async (data) => {
       console.log(data)
       setSuccessMessage(data.message)
@@ -46,7 +43,11 @@ export default function Register() {
     setNameError('');
     setEmailError('');
     setPasswordError('');
-    mutate()
+    mutate({
+      name: nameValue, 
+      email: emailValue, 
+      password: passwordValue
+    })
   }
 
   return (

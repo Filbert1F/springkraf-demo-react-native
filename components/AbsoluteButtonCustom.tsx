@@ -1,5 +1,4 @@
-import { DimensionValue, Pressable, StyleSheet, Text, View } from "react-native";
-import ChipCustom from "./ChipCustom";
+import { Pressable, Text, View } from "react-native";
 
 type Props = {
   title: string

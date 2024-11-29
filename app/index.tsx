@@ -1,13 +1,12 @@
-import { postLogin } from "@/api/post-login";
+import { useLogin } from "@/api-hooks/menu/mutation";
 import AbsoluteButtonCustom from "@/components/AbsoluteButtonCustom";
 import ButtonCustom from "@/components/ButtonCustom";
 import SvgComponent from "@/components/SvgComponent";
 import TextInputCustom from "@/components/TextInputCustom";
 import getToken from "@/utils/get-token";
 import storeToken from "@/utils/store-token";
-import { useMutation } from "@tanstack/react-query";
-import { Link, Redirect, useNavigation, useRouter } from "expo-router";
-import React, { useState } from "react";
+import { Link, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
 export default function Index() {
@@ -20,8 +19,7 @@ export default function Index() {
 
   const router = useRouter();
 
-  const { mutate, isPending, isError } = useMutation({
-    mutationFn: () => postLogin(emailValue, passwordValue),
+  const { mutate, isPending } = useLogin({
     onSuccess: async (data) => {
       console.log(data)
       await storeToken(data.data.accessToken)
@@ -39,10 +37,24 @@ export default function Index() {
     }
   })
 
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await getToken();
+      if (token) {
+        router.replace('/notes');
+      }
+    };
+
+    checkToken();
+  }, [router]);
+
   const onSubmit = () => {
     setEmailError('');
     setPasswordError('');
-    mutate()
+    mutate({ 
+      email: emailValue, 
+      password: passwordValue 
+    });
   }
 
   return (

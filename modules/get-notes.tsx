@@ -1,6 +1,3 @@
-import { getNotes } from "@/api/get-notes";
-import { getNotesArchived } from "@/api/get-notes-archived";
-import { postNote } from "@/api/post-note";
 import CardCustom from "@/components/CardCustom";
 import EmptyNotes from "@/components/EmptyNotes";
 import ErrorCustom from "@/components/ErrorCustom";
@@ -11,12 +8,13 @@ import LoadingCustom from "@/components/LoadingCustom";
 import ModalCustom from "@/components/ModalCustom";
 import TextAreaCustom from "@/components/TextAreaCustom";
 import TextInputCustom from "@/components/TextInputCustom";
-import { NoteType } from "@/types/note";
 import removeToken from "@/utils/remove-token";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { FlatList, View } from "react-native";
+import { useAddNote } from "@/api-hooks/menu/mutation";
+import { useGetArchivedNotes, useGetNotes } from "@/api-hooks/menu/query";
 
 type Props = {
   endpoint: 'notes' | 'notes-archived',
@@ -34,15 +32,23 @@ export default function GetNotes({
   
   const [searchValue, setSearchValue] = useState(local.title as string);
 
-  const { data, isPending, isError, error } = useQuery({
-    queryKey: [endpoint, local.title],
-    queryFn: () => endpoint === 'notes' ? 
-      getNotes(local.title as string) : 
-      getNotesArchived(local.title as string),
-    retry: (failureCount, error: any) => {
-      return error?.status !== 401;
-    },
-  })
+  const { data, isPending, isError, error } = endpoint === 'notes' ? useGetNotes(
+    local.title as string, 
+    'title',
+    {
+      retry: (failureCount, error) => {
+        return error.status !== 'fail';
+      },
+    }
+  ) : useGetArchivedNotes(
+    local.title as string, 
+    'title',
+    {
+      retry: (failureCount, error) => {
+        return error.status !== 'fail';
+      },
+    }
+  );
 
   const router = useRouter();
 
@@ -63,13 +69,14 @@ export default function GetNotes({
 
   const queryClient = useQueryClient()
 
-  const addNoteMutation = useMutation({
-    mutationFn: () => postNote(titleValue, bodyValue),
+  const addNoteMutation = useAddNote({
     onSuccess: async (data) => {
       console.log(data)
       queryClient.invalidateQueries({ queryKey: [endpoint] })
+      setTitleValue('')
+      setBodyValue('')
     },
-    onError: (error) => {
+    onError: async (error) => {
       console.log(error.message)
     }
   })
@@ -83,7 +90,10 @@ export default function GetNotes({
   }
 
   const onPressAdd = () => {
-    addNoteMutation.mutate()
+    addNoteMutation.mutate({ 
+      title: titleValue, 
+      body: bodyValue 
+    })
   }
 
   const onSubmitEditing = () => {
@@ -92,8 +102,7 @@ export default function GetNotes({
 
   useEffect(() => {
     if (isError) {
-      const typedError = error as { status?: number };
-      if (typedError.status === 401) {
+      if (error.status === "fail") {
         removeToken();
         router.replace('/');
       }
@@ -118,9 +127,9 @@ export default function GetNotes({
         searchValue={searchValue}
         setSearchValue={setSearchValue}
       >
-        {data.length === 0 ? <EmptyNotes /> :
+        {data.data.length === 0 ? <EmptyNotes /> :
           <FlatList
-            data={data}
+            data={data.data}
             renderItem={(dat) => 
               <Link href={`/note-detail/${dat.item.id}`} asChild>
                 <CardCustom title={dat.item.title} body={dat.item.body} id={dat.item.id} />

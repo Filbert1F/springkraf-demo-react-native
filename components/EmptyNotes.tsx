@@ -1,5 +1,4 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { Text, View } from "react-native";
 
 export default function EmptyNotes() {

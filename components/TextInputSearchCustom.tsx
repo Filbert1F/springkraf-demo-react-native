@@ -1,6 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useState, useRef, useEffect } from "react";
-import { Animated, TextInput, View, Pressable, StyleSheet } from "react-native";
+import { TextInput, View, Pressable, StyleSheet } from "react-native";
 
 type Props = {
   label: string

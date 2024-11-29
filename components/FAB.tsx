@@ -1,5 +1,4 @@
-import { DimensionValue, Pressable, StyleSheet, Text, View } from "react-native";
-import ChipCustom from "./ChipCustom";
+import { Pressable, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
 type Props = {
